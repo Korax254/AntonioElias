@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Antonio Elías Zapata — Senior 3D Artist</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0c;
+      --surface: #111116;
+      --border: #1e1e2a;
+      --accent: #e8c84a;
+      --accent2: #5b8fff;
+      --text: #e8e8f0;
+      --muted: #6b6b80;
+      --font-display: 'Bebas Neue', sans-serif;
+      --font-body: 'Syne', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* Custom cursor */
+    .cursor {
+      width: 10px; height: 10px;
+      background: var(--accent);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transition: transform 0.1s ease;
+      mix-blend-mode: difference;
+    }
+    .cursor-ring {
+      width: 36px; height: 36px;
+      border: 1px solid var(--accent);
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      z-index: 9998;
+      transition: all 0.15s ease;
+      mix-blend-mode: difference;
+      opacity: 0.6;
+    }
+
+    /* Noise overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 100;
+      opacity: 0.3;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 500;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 4rem;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.3s, background 0.3s;
+    }
+    nav.scrolled {
+      background: rgba(10,10,12,0.92);
+      border-color: var(--border);
+      backdrop-filter: blur(12px);
+    }
+    .nav-logo {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+    }
+    .nav-links { display: flex; gap: 2.5rem; }
+    .nav-links a {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      text-decoration: none;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0 4rem 5rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(232,200,74,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232,200,74,0.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    .hero-glow {
+      position: absolute;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(91,143,255,0.12) 0%, transparent 70%);
+      top: -100px; right: -100px;
+      animation: pulse 6s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.1); opacity: 0.7; }
+    }
+
+    .hero-tag {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.2s forwards;
+    }
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(4rem, 10vw, 9rem);
+      line-height: 0.92;
+      letter-spacing: 0.02em;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.4s forwards;
+    }
+    .hero h1 span { color: var(--accent); }
+    .hero-sub {
+      margin-top: 2rem;
+      font-size: 1rem;
+      color: var(--muted);
+      max-width: 500px;
+      line-height: 1.7;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.6s forwards;
+    }
+    .hero-cta {
+      margin-top: 3rem;
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.8s forwards;
+    }
+    .btn {
+      display: inline-block;
+      padding: 0.9rem 2.2rem;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn:hover { background: var(--accent); color: var(--bg); }
+    .btn.secondary { border-color: var(--border); color: var(--muted); }
+    .btn.secondary:hover { border-color: var(--muted); color: var(--text); background: transparent; }
+
+    .hero-stats {
+      position: absolute;
+      right: 4rem;
+      bottom: 5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+      opacity: 0;
+      animation: fadeIn 1s 1.2s forwards;
+    }
+    .stat-item { text-align: right; }
+    .stat-num {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .stat-label {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* SECTION BASE */
+    section {
+      padding: 7rem 4rem;
+      border-top: 1px solid var(--border);
+    }
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.25em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      line-height: 1;
+      margin-bottom: 3rem;
+    }
+
+    /* ABOUT */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: start;
+    }
+    .about-text p {
+      font-size: 1.05rem;
+      line-height: 1.85;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+    .about-text p strong { color: var(--text); }
+
+    .about-info { display: flex; flex-direction: column; gap: 1.5rem; }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .info-key {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.15em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .info-val { font-size: 0.95rem; color: var(--text); }
+
+    /* EXPERIENCE */
+    .exp-list { display: flex; flex-direction: column; gap: 0; }
+    .exp-item {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 3rem;
+      padding: 2.5rem 0;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.2s;
+    }
+    .exp-item:hover { background: rgba(255,255,255,0.01); }
+    .exp-meta { padding-top: 0.3rem; }
+    .exp-date {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+    .exp-company {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+    .exp-role {
+      font-family: var(--font-display);
+      font-size: 1.6rem;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+    .exp-desc {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.8;
+    }
+    .exp-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+    .tag {
+      font-family: var(--font-mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.7rem;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    /* SKILLS */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+    .skill-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 2rem;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .skill-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+    .skill-card-icon {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .skill-card-title {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.7rem;
+    }
+    .skill-card-list {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      line-height: 2;
+      letter-spacing: 0.05em;
+    }
+
+    /* PORTFOLIO PLACEHOLDER */
+    .portfolio-note {
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      padding: 4rem;
+      text-align: center;
+    }
+    .portfolio-note p {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      line-height: 2;
+    }
+    .portfolio-note a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .portfolio-note a:hover { text-decoration: underline; }
+
+    /* CONTACT */
+    .contact-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: center;
+    }
+    .contact-left p {
+      font-size: 1.05rem;
+      color: var(--muted);
+      line-height: 1.8;
+      margin-bottom: 2rem;
+    }
+    .contact-links { display: flex; flex-direction: column; gap: 1rem; }
+    .contact-link {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      text-decoration: none;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      padding: 1rem 1.5rem;
+      border: 1px solid var(--border);
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .contact-link:hover { border-color: var(--accent); color: var(--accent); }
+    .contact-link span { color: var(--accent); margin-right: 0.5rem; }
+
+    .contact-big {
+      font-family: var(--font-display);
+      font-size: clamp(3rem, 6vw, 6rem);
+      line-height: 1;
+      color: var(--border);
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2rem 4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    footer p {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+
+    /* SCROLL ANIMATIONS */
+    .reveal {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      nav { padding: 1.2rem 1.5rem; }
+      .nav-links { display: none; }
+      .hero { padding: 0 1.5rem 4rem; }
+      .hero-stats { display: none; }
+      section { padding: 4rem 1.5rem; }
+      .about-grid, .contact-inner { grid-template-columns: 1fr; gap: 3rem; }
+      .exp-item { grid-template-columns: 1fr; gap: 0.5rem; }
+      footer { flex-direction: column; gap: 1rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <!-- NAV -->
+  <nav id="nav">
+    <div class="nav-logo">AEZ</div>
+    <div class="nav-links">
+      <a href="#about">About</a>
+      <a href="#experience">Experience</a>
+      <a href="#skills">Skills</a>
+      <a href="#portfolio">Portfolio</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="home">
+    <div class="hero-grid"></div>
+    <div class="hero-glow"></div>
+    <div class="hero-tag">Senior 3D Artist & Technical Lead</div>
+    <h1>ANTONIO<br><span>ELÍAS</span><br>ZAPATA</h1>
+    <p class="hero-sub">Crafting stylized worlds for mobile games, VR/AR experiences, and interactive media. 7+ years building optimized 3D pipelines that bridge art and engineering.</p>
+    <div class="hero-cta">
+      <a href="#portfolio" class="btn">View Portfolio</a>
+      <a href="#contact" class="btn secondary">Get in Touch</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-num">7+</div>
+        <div class="stat-label">Years of Experience</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">4</div>
+        <div class="stat-label">Studios Collaborated</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-num">BCN</div>
+        <div class="stat-label">Based in Barcelona</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="section-label reveal">// 001 — About</div>
+    <div class="section-title reveal">WHO<br>I AM</div>
+    <div class="about-grid">
+      <div class="about-text reveal">
+        <p>I'm a <strong>Senior 3D Artist & Technical Lead</strong> based in Barcelona with over 7 years of experience creating high-quality assets for mobile games, VR/AR applications, and educational platforms.</p>
+        <p>My work lives at the intersection of <strong>artistic vision and technical precision</strong> — I specialize in stylized assets, Unity pipeline optimization, and mentoring art teams to push quality while hitting performance targets.</p>
+        <p>From shipping yearly titles in the <strong>Soccer Manager franchise</strong> to teaching the next generation of 3D artists at ENTI-UB, I bring both production experience and a deep understanding of real-time pipelines.</p>
+      </div>
+      <div class="about-info reveal">
+        <div class="info-row">
+          <span class="info-key">Location</span>
+          <span class="info-val">Barcelona, Spain</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Specialization</span>
+          <span class="info-val">Stylized 3D / Mobile / VR</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Primary Engine</span>
+          <span class="info-val">Unity (Expert)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Languages</span>
+          <span class="info-val">Spanish (Native) · English (B2)</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Education</span>
+          <span class="info-val">Higher Tech. 3D Animation · ENTI-UB</span>
+        </div>
+        <div class="info-row">
+          <span class="info-key">Contact</span>
+          <span class="info-val">+34 672 605 962</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXPERIENCE -->
+  <section id="experience">
+    <div class="section-label reveal">// 002 — Experience</div>
+    <div class="section-title reveal">WORK<br>HISTORY</div>
+    <div class="exp-list">
+
+      <div class="exp-item reveal">
+        <div class="exp-meta">
+          <div class="exp-date">Jun 2025 – Nov 2025</div>
+          <div class="exp-company">Titutitech · Barcelona</div>
+        </div>
+        <div class="exp-content">
+          <div class="exp-role">Senior 3D Artist — Unreal Engine</div>
+          <p class="exp-desc">Primary lead for 3D scene optimization and visual troubleshooting across target platforms. Mentored the art team on modeling efficiency and technical standards, improving asset quality and production workflows across the board.</p>
+          <div class="exp-tags">
+            <span class="tag">Unreal Engine</span>
+            <span class="tag">Technical Art</span>
+            <span class="tag">Team Lead</span>
+            <span class="tag">Optimization</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="exp-item reveal">
+        <div class="exp-meta">
+          <div class="exp-date">Feb 2021 – May 2025</div>
+          <div class="exp-company">ENTI-UB · Barcelona</div>
+        </div>
+        <div class="exp-content">
+          <div class="exp-role">3D Workflow & Portfolio Teacher</div>
+          <p class="exp-desc">Taught advanced 3D modeling, texturing, and rendering workflows for game development students. Guided and mentored students in creating industry-standard portfolios focused on high-quality stylized assets, covering Blender, Maya, ZBrush, Substance Painter, and Unity.</p>
+          <div class="exp-tags">
+            <span class="tag">Teaching</span>
+            <span class="tag">Blender</span>
+            <span class="tag">ZBrush</span>
+            <span class="tag">Substance Painter</span>
+            <span class="tag">Mentoring</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="exp-item reveal">
+        <div class="exp-meta">
+          <div class="exp-date">Jun 2019 – Oct 2024</div>
+          <div class="exp-company">Invincibles Studio · UK</div>
+        </div>
+        <div class="exp-content">
+          <div class="exp-role">Freelance 3D Artist — Mobile Games</div>
+          <p class="exp-desc">Developed high-quality 3D assets for the Soccer Manager franchise (SM20–SM25), including complex environments and interactive HUD elements. Mastered Unity-based pipeline balancing visual realism with strict mobile performance constraints, collaborating with Art Direction and Marketing across multiple yearly releases.</p>
+          <div class="exp-tags">
+            <span class="tag">Unity</span>
+            <span class="tag">Mobile</span>
+            <span class="tag">Soccer Manager</span>
+            <span class="tag">Pipeline</span>
+            <span class="tag">HUD Design</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="exp-item reveal">
+        <div class="exp-meta">
+          <div class="exp-date">Apr 2020 – Apr 2023</div>
+          <div class="exp-company">Agama Interactive · Barcelona</div>
+        </div>
+        <div class="exp-content">
+          <div class="exp-role">Freelance 3D Artist — VR/AR & Serious Games</div>
+          <p class="exp-desc">Created 3D environments and optimized assets for real-time rendering in Unity and Unreal Engine for medical and educational VR/AR applications. Collaborated with designers and engineers to develop interactive training experiences.</p>
+          <div class="exp-tags">
+            <span class="tag">VR/AR</span>
+            <span class="tag">Unity</span>
+            <span class="tag">Unreal Engine</span>
+            <span class="tag">Medical Sim</span>
+            <span class="tag">EdTech</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SKILLS -->
+  <section id="skills">
+    <div class="section-label reveal">// 003 — Skills</div>
+    <div class="section-title reveal">CORE<br>COMPETENCIES</div>
+    <div class="skills-grid">
+      <div class="skill-card reveal">
+        <div class="skill-card-icon">◈</div>
+        <div class="skill-card-title">3D Modeling & Sculpting</div>
+        <div class="skill-card-list">
+          High-poly to low-poly workflow<br>
+          Stylized characters & environments<br>
+          Maya · Blender · 3ds Max · ZBrush
+        </div>
+      </div>
+      <div class="skill-card reveal">
+        <div class="skill-card-icon">◉</div>
+        <div class="skill-card-title">Texturing & Shading</div>
+        <div class="skill-card-list">
+          Hand-painted and PBR textures<br>
+          Substance Painter · Substance Designer<br>
+          Photoshop · 3DCoat
+        </div>
+      </div>
+      <div class="skill-card reveal">
+        <div class="skill-card-icon">▣</div>
+        <div class="skill-card-title">Game Engines</div>
+        <div class="skill-card-list">
+          Unity (Expert)<br>
+          Unreal Engine · Spark AR<br>
+          Asset Integration · Shaders
+        </div>
+      </div>
+      <div class="skill-card reveal">
+        <div class="skill-card-icon">⬡</div>
+        <div class="skill-card-title">Technical Art</div>
+        <div class="skill-card-list">
+          Mobile platform optimization<br>
+          Draw call reduction · LOD management<br>
+          Technical troubleshooting & pipeline
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PORTFOLIO -->
+  <section id="portfolio">
+    <div class="section-label reveal">// 004 — Portfolio</div>
+    <div class="section-title reveal">SELECTED<br>WORKS</div>
+    <div class="portfolio-note reveal">
+      <p>
+        Portfolio images coming soon.<br><br>
+        In the meantime, explore my full work on ArtStation:<br><br>
+        <a href="https://www.artstation.com/aeli" target="_blank">→ artstation.com/aeli</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="section-label reveal">// 005 — Contact</div>
+    <div class="contact-inner">
+      <div class="contact-left reveal">
+        <div class="section-title">LET'S<br>WORK<br>TOGETHER</div>
+        <p>Available for freelance projects, full-time roles, and collaborations in mobile gaming, VR/AR, and 3D education. Based in Barcelona, working globally.</p>
+        <div class="contact-links">
+          <a href="tel:+34672605962" class="contact-link">
+            <span>✆</span> +34 672 605 962
+          </a>
+          <a href="https://www.artstation.com/aeli" target="_blank" class="contact-link">
+            <span>◈</span> ArtStation — aeli
+          </a>
+        </div>
+      </div>
+      <div class="reveal">
+        <div class="contact-big">BCN<br>—<br>ESP</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>© 2025 Antonio Elías Zapata — Senior 3D Artist</p>
+    <p>Barcelona, Spain</p>
+  </footer>
+
+  <script>
+    // Custom cursor
+    const cursor = document.getElementById('cursor');
+    const ring = document.getElementById('cursorRing');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+    function animateCursor() {
+      cursor.style.left = mx - 5 + 'px';
+      cursor.style.top = my - 5 + 'px';
+      rx += (mx - rx) * 0.12;
+      ry += (my - ry) * 0.12;
+      ring.style.left = rx - 18 + 'px';
+      ring.style.top = ry - 18 + 'px';
+      requestAnimationFrame(animateCursor);
+    }
+    animateCursor();
+
+    // Nav scroll
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => {
+      nav.classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    // Reveal on scroll
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.1 });
+    reveals.forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>
